@@ -1,0 +1,20 @@
+# inputs
+samples_dir: input/samples
+genome_path: input/lutzomyia-ASM2433408v1-chromosomes.fa
+gatk_jar: ./gatk-4.1.2.0/gatk-package-4.1.2.0-local.jar
+java: /usr/lib/jvm/java-8-openjdk-amd64/bin/java
+
+# trimmomatic settings
+trimmomatic_adapters: /usr/share/trimmomatic/TruSeq3-PE-2.fa
+trimmomatic_minlen: 70
+
+# alignment filter settings
+min_mapping_quality: 10
+
+# haplotyping settings
+# these parameters are from the 1000 Anopheles genomes paper
+max_alternate_alleles: 3
+heterozygosity: 0.01
+indel_heterozygosity: 0.001
+
+
