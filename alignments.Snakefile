@@ -68,23 +68,10 @@ rule index_genome:
     shell:
         "bwa index {input}"
 
-rule bwa_aln:
+rule bwa_mem:
     input:
         genome="data/genome/genome.fa",
-        fastq="data/cleaned_reads/{sample}_{end}p.fastq.gz",
-        index="data/genome/genome.fa.bwt"
-    output:
-        "data/alignments/{sample}_{end}.sai"
-    threads:
-        4
-    shell:
-        "bwa aln -t {threads} {input.genome} {input.fastq} > {output}"
-
-rule bwa_sampe:
-    input:
-        genome="data/genome/genome.fa",
-        sai1="data/alignments/{sample}_1.sai",
-        sai2="data/alignments/{sample}_2.sai",
+        index="data/genome/genome.fa.bwt",
         fastq1="data/cleaned_reads/{sample}_1p.fastq.gz",
         fastq2="data/cleaned_reads/{sample}_2p.fastq.gz"
     output:
@@ -92,7 +79,7 @@ rule bwa_sampe:
     threads:
         4
     shell:
-        "bwa sampe {input.genome} {input.sai1} {input.sai2} {input.fastq1} {input.fastq2} | samtools sort -@ {threads} -O bam -o {output}"
+        "bwa mem -t {threads} {input.genome} {input.fastq1} {input.fastq2} | samtools sort -@ {threads} -O bam -o {output}"
 
 rule mapping_stats:
     input:
@@ -125,7 +112,7 @@ rule index_filtered_alignments:
     shell:
         "samtools index -b {input} {output}"
 
-rule remove_duplicates:
+rule mark_duplicates:
     input:
         bam="data/filtered_alignments/{sample}.filtered.bam",
         index="data/filtered_alignments/{sample}.filtered.bai"
