@@ -5,30 +5,14 @@ import glob
 from os.path import basename
 from os.path import join
 
-rule select_snps:
+rule annotate:
     input:
         "data/genotypes/genotypes.vcf.gz"
     params:
         gatk=config["gatk_jar"],
         java=config["java"]
     output:
-        "data/genotypes/snps.vcf.gz"
-    threads:
-        3
-    shell:
-        """
-        {params.java} -jar {params.gatk} SelectVariants -select-type SNP \
-        -V {input} -O {output}
-        """
-
-rule annotate_snps:
-    input:
-        "data/genotypes/snps.vcf.gz"
-    params:
-        gatk=config["gatk_jar"],
-        java=config["java"]
-    output:
-        "data/genotypes/snps.annotated.vcf.gz"
+        "data/genotypes/genotypes.annotated.vcf.gz"
     threads:
         4
     shell:
@@ -40,16 +24,42 @@ rule annotate_snps:
         -filter "ReadPosRankSum < -8.0" --filter-name "ReadPosRankSum-8" \
         -O {output}
         """
-
-rule filter_snps:
+rule filter:
     input:
-        "data/genotypes/snps.annotated.vcf.gz"
+        "data/genotypes/genotypes.annotated.vcf.gz"
+    output:
+        gz="data/genotypes/genotypes.filtered.vcf.gz"
+    threads:
+        4
+    shell:
+        "vcftools --gzvcf {input} --min-meanDP 14 --max-meanDP 120 --max-missing-count 7 --maf 0.05 --remove-filtered-all --stdout --recode --recode-INFO-all | bgzip -c -@ {threads} > {output.gz}"
+
+rule index:
+    input:
+        "data/genotypes/genotypes.filtered.vcf.gz"
+    output:
+        "data/genotypes/genotypes.filtered.vcf.gz.tbi"
+    threads:
+        4
+    shell:
+        "tabix -p vcf {input}"
+
+rule select_snps:
+    input:
+        gz="data/genotypes/genotypes.filtered.vcf.gz",
+        tbi="data/genotypes/genotypes.filtered.vcf.gz.tbi"
+    params:
+        gatk=config["gatk_jar"],
+        java=config["java"]
     output:
         "data/genotypes/snps.filtered.vcf.gz"
     threads:
-        1
+        3
     shell:
-        "vcftools --gzvcf {input} --min-meanDP 14 --max-meanDP 60 --max-missing-count 7 --remove-filtered-all --stdout --recode --recode-INFO-all --mac 2 | gzip -c > {output}" 
+        """
+        {params.java} -jar {params.gatk} SelectVariants -select-type SNP \
+        -V {input.gz} -O {output}
+        """
 
 rule biallelic_snps:
     input:
@@ -57,9 +67,9 @@ rule biallelic_snps:
     output:
         "data/genotypes/snps.filtered.biallelic.vcf.gz"
     threads:
-        1
+        4
     shell:
-        "vcftools --gzvcf {input} --min-alleles 2 --max-alleles 2 --stdout --recode --recode-INFO-all | gzip -c > {output}"
+        "vcftools --gzvcf {input} --min-alleles 2 --max-alleles 2 --stdout --recode --recode-INFO-all | bgzip -c -@ {threads} > {output}"
         
 rule run_pipeline:
     input:
