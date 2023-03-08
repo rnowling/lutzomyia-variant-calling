@@ -6,15 +6,32 @@ java: /usr/lib/jvm/java-8-openjdk-amd64/bin/java
 
 # trimmomatic settings
 trimmomatic_adapters: /usr/share/trimmomatic/TruSeq3-PE-2.fa
-trimmomatic_minlen: 70
+trimmomatic_minlen: 30
 
 # alignment filter settings
 min_mapping_quality: 10
 
 # haplotyping settings
 # these parameters are from the 1000 Anopheles genomes paper
-max_alternate_alleles: 3
 heterozygosity: 0.01
 indel_heterozygosity: 0.001
+min_base_quality_score: 17
+contamination_fraction_to_filter: 0.05
 
+# variant filtering parameters
+chromosomes: ["CP101402.1", "CP101403.1", "CP101404.1", "CP101405.1"]
+gatk_filters:
+    - name: "QD5"
+      expr: "QD < 5.0"
+    - name: "QUAL30"
+      expr: "QUAL < 30.0"
+    - name: "FS60"
+      expr: "FS > 60.0"
+    - name: "ReadPosRankSum-8"
+      expr: "ReadPosRankSum < -8.0"
 
+# vcftools filters
+max_meanDP: 120
+min_meanDP: 14
+max_missing_count: 7
+maf: 0.05

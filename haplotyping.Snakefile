@@ -36,7 +36,7 @@ rule index_deduped_alignments:
     output:
         "data/deduped_alignments/{sample}.deduped.bai"
     threads:
-        4
+        6
     shell:
         "samtools index -b {input} {output}"
 
@@ -47,7 +47,7 @@ rule add_read_groups:
     output:
         bam="data/alignments_with_read_groups/{sample}.read_groups.bam"
     threads:
-        4
+        6
     shell:
         "PicardCommandLine AddOrReplaceReadGroups I={input.bam} O={output.bam} RGLB=lib1 RGPL=illumina RGPU=unit1 RGSM={wildcards.sample}"
 
@@ -80,7 +80,7 @@ rule index_read_groups:
     output:
         "data/alignments_with_read_groups/{sample}.read_groups.bai"
     threads:
-        4
+        6
     shell:
         "samtools index -b {input} {output}"
 
@@ -94,15 +94,16 @@ rule call_haplotypes:
     params:
         gatk=config["gatk_jar"],
         java=config["java"],
-        max_alt_alleles=config["max_alternate_alleles"],
         hetero=config["heterozygosity"],
-        indel_hetero=config["indel_heterozygosity"]
+        indel_hetero=config["indel_heterozygosity"],
+        min_base_quality_score=config["min_base_quality_score"],
+        contamination_fraction_to_filter=config["contamination_fraction_to_filter"]
     output:
         g_vcf="data/haplotypes/{sample}.g.vcf.gz"
     threads:
-        6
+        4
     shell:
-        "{params.java} -jar {params.gatk} HaplotypeCaller -R {input.genome} -I {input.bam} -O {output.g_vcf} -ERC GVCF --max-alternate-alleles {params.max_alt_alleles} --native-pair-hmm-threads {threads} --heterozygosity {params.hetero} --indel-heterozygosity {params.indel_hetero}"
+        "{params.java} -jar {params.gatk} HaplotypeCaller -R {input.genome} -I {input.bam} -O {output.g_vcf} -ERC GVCF --min-base-quality-score {params.min_base_quality_score} --contamination-fraction-to-filter {params.contamination_fraction_to_filter} --native-pair-hmm-threads {threads} --heterozygosity {params.hetero} --indel-heterozygosity {params.indel_hetero}"
 
 rule run_pipeline:
     input:
