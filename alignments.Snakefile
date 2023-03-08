@@ -56,7 +56,7 @@ rule clean_reads:
     threads:
         4
     shell:
-        "TrimmomaticPE -threads {threads} {input.reads1} {input.reads2} {output} ILLUMINACLIP:{input.adapters}:2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:15 HEADCROP:10 MINLEN:%(trimmomatic_minlen)s &> {params.log}" % config
+        "TrimmomaticPE -threads {threads} {input.reads1} {input.reads2} {output} ILLUMINACLIP:{input.adapters}:2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:15 MINLEN:%(trimmomatic_minlen)s &> {params.log}" % config
 
 rule index_genome:
     input:
