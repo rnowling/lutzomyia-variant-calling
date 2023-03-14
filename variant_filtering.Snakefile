@@ -15,7 +15,7 @@ rule separate_by_chrom:
     shell:
         "vcftools --gzvcf {input} --chr {wildcards.chrom} --stdout --recode --recode-INFO-all | bgzip -c -@ {threads} > {output}"
 
-rule missingness:
+rule indv_missingness:
     input:
         "data/genotypes/{chrom}.genotypes.vcf.gz"
     output:
@@ -25,6 +25,16 @@ rule missingness:
     shell:
         "vcftools --gzvcf {input} --missing-indv --out data/genotypes/{wildcards.chrom}.genotypes"
 
+rule site_missingness:
+    input:
+        "data/genotypes/{chrom}.genotypes.vcf.gz"
+    output:
+        "data/genotypes/{chrom}.genotypes.lmiss"
+    threads:
+        4
+    shell:
+        "vcftools --gzvcf {input} --missing-site --out data/genotypes/{wildcards.chrom}.genotypes"
+        
 rule index_by_chrom:
     input:
         "data/genotypes/{chrom}.genotypes.vcf.gz"
@@ -106,5 +116,7 @@ rule run_pipeline:
     input:
         filtered_snps=expand("data/genotypes/{chrom}.snps.biallelic.vcf.gz",
         	  	     chrom=config["chromosomes"]),
-        missingness=expand("data/genotypes/{chrom}.genotypes.imiss",
+        indv_missingness=expand("data/genotypes/{chrom}.genotypes.imiss",
+                           chrom=config["chromosomes"]),
+        site_missingness=expand("data/genotypes/{chrom}.genotypes.lmiss",
                            chrom=config["chromosomes"])
