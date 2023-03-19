@@ -111,6 +111,23 @@ rule biallelic_snps:
         4
     shell:
         "vcftools --gzvcf {input} --min-alleles 2 --max-alleles 2 --stdout --recode --recode-INFO-all | bgzip -c -@ {threads} > {output}"
+
+rule select_indels:
+    input:
+        gz="data/genotypes/{chrom}.genotypes.filtered.vcf.gz",
+        tbi="data/genotypes/{chrom}.genotypes.filtered.vcf.gz.tbi"
+    params:
+        gatk=config["gatk_jar"],
+        java=config["java"]
+    output:
+        "data/genotypes/{chrom}.indels.filtered.vcf.gz"
+    threads:
+        3
+    shell:
+        """
+        {params.java} -jar {params.gatk} SelectVariants -select-type INDEL \
+        -V {input.gz} -O {output}
+        """
         
 rule run_pipeline:
     input:
@@ -119,4 +136,7 @@ rule run_pipeline:
         indv_missingness=expand("data/genotypes/{chrom}.genotypes.imiss",
                            chrom=config["chromosomes"]),
         site_missingness=expand("data/genotypes/{chrom}.genotypes.lmiss",
-                           chrom=config["chromosomes"])
+                           chrom=config["chromosomes"]),
+        filtered_indeos=expand("data/genotypes/{chrom}.indels.filtered.vcf.gz",
+        	  	       chrom=config["chromosomes"])
+
