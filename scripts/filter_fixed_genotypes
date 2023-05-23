@@ -1,0 +1,16 @@
+#!/usr/bin/env python3
+
+import sys
+
+for ln in sys.stdin:
+    ln = ln.strip()
+    if ln.startswith("#"):
+        print(ln)
+    else:
+        cols = ln.split()
+        gts = [c.split(":")[0] for c in cols[9:]]
+        uniq_gts = set([(gt[0], gt[2]) for gt in gts if gt != "./." and gt != "."])
+        if len(uniq_gts) > 1:
+            print(ln)
+        else:
+            print("Fixed genotype:", ln, file=sys.stderr)

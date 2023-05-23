@@ -73,7 +73,7 @@ rule filter:
     threads:
         4
     shell:
-        "vcftools --gzvcf {input} --min-meanDP {params.min_meanDP} --max-meanDP {params.max_meanDP} --max-missing-count {params.max_missing_count} --maf {params.maf} --remove-filtered-all --stdout --recode --recode-INFO-all | bgzip -c -@ {threads} > {output}"
+        "vcftools --gzvcf {input} --min-meanDP {params.min_meanDP} --max-meanDP {params.max_meanDP} --max-missing-count {params.max_missing_count} --maf {params.maf} --remove-filtered-all --stdout --recode --recode-INFO-all | ./scripts/filter_fixed_genotypes | bgzip -c -@ {threads} > {output}"
 
 rule index_filtered:
     input:
@@ -110,7 +110,7 @@ rule biallelic_snps:
     threads:
         4
     shell:
-        "vcftools --gzvcf {input} --min-alleles 2 --max-alleles 2 --stdout --recode --recode-INFO-all | bgzip -c -@ {threads} > {output}"
+        "vcftools --gzvcf {input} --min-alleles 2 --max-alleles 2 --stdout --recode --recode-INFO-all | ./scripts/filter_fixed_genotypes | bgzip -c -@ {threads} > {output}"
 
 rule select_indels:
     input:
@@ -137,6 +137,6 @@ rule run_pipeline:
                            chrom=config["chromosomes"]),
         site_missingness=expand("data/genotypes/{chrom}.genotypes.lmiss",
                            chrom=config["chromosomes"]),
-        filtered_indeos=expand("data/genotypes/{chrom}.indels.filtered.vcf.gz",
+        filtered_indels=expand("data/genotypes/{chrom}.indels.filtered.vcf.gz",
         	  	       chrom=config["chromosomes"])
 
